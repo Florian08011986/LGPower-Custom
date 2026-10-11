@@ -13,6 +13,9 @@ object ReleaseNotes {
     fun since(lastSeenCode: Int) = all.filter { it.code > lastSeenCode }
 
     val all = listOf(
+        Release(45, "1.39.0", "2026-10-11", listOf(
+            "Wake-on-LAN wakes the TV whether it's on Wi-Fi or a network cable, and the TV screen in Settings shows both addresses",
+        )),
         Release(44, "1.38.0", "2026-10-04", listOf(
             "Settings > About shows the app version up top, with an optional tip if you like the app. It doesn't unlock anything",
         )),
