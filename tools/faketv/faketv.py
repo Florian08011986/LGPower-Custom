@@ -75,6 +75,10 @@ class TvState:
         # a Wake-on-LAN packet arrives (only when --wake-delays is given).
         self.off = False
         self.mac_address = "AA:BB:CC:DD:EE:FF"
+        # A real TV reports the MAC of both interfaces whichever one is plugged in;
+        # --wired makes this one the live interface instead of Wi-Fi.
+        self.other_mac = "20:3D:BD:DE:49:12"
+        self.wired = False
         self.ip_address = "192.168.1.50"
 
 
@@ -243,11 +247,11 @@ def apply_settings(category: str, settings: dict):
 # Each handler: (payload: dict, ws) -> dict merged into {"returnValue": True, ...}
 
 def h_connectionmanager_getinfo(payload, ws):
-    # WebOsClient.kt:41-42 `payload.optJSONObject("wifiInfo")?.optString("macAddress")`
-    # (falls back to "wiredInfo" — we only need to satisfy the wifiInfo branch)
+    live, idle = STATE.mac_address, STATE.other_mac
+    wifi, wired = (idle, live) if STATE.wired else (live, idle)
     return {
-        "wifiInfo": {"macAddress": STATE.mac_address, "method": "wifi"},
-        "ipAddress": STATE.ip_address,
+        "wifiInfo": {"macAddress": wifi},
+        "wiredInfo": {"macAddress": wired},
     }
 
 
@@ -322,6 +326,9 @@ class _WolProtocol(asyncio.DatagramProtocol):
             return
         mac = ":".join(f"{b:02X}" for b in data[6:12])
         log(f"[wol] magic packet from {addr[0]} for {mac}")
+        if mac != STATE.mac_address.upper():
+            log("[wol] not the live interface's MAC, ignored")
+            return
         if not STATE.off or _wake_pending:
             return
         _wake_pending = True
@@ -704,8 +711,11 @@ def main():
     parser.add_argument("--sound-output", default="tv_speaker",
                          help="soundOutput reported by getVolume; anything but tv_speaker (e.g. external_arc) "
                               "makes setVolume a no-op while the volume keys still work, like a receiver on ARC")
+    parser.add_argument("--wired", action="store_true",
+                         help="TV is on a network cable: only a magic packet for the wiredInfo MAC wakes it")
     args = parser.parse_args()
     STATE.sound_output = args.sound_output
+    STATE.wired = args.wired
 
     CONFIG.host = args.host
     CONFIG.port = args.port

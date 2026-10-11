@@ -22,6 +22,9 @@ import javax.net.ssl.SSLContext
 import javax.net.ssl.TrustManager
 import javax.net.ssl.X509TrustManager
 
+/** The `tv_mac` pref is a list; older installs hold a single address. Newlines count as separators because the detail screen's field wraps. */
+fun macList(s: String): List<String> = s.split(Regex("[,;\\s]+")).filter { it.isNotEmpty() }
+
 class WebOsClient(private val context: Context) {
 
     private val prefs = context.getSharedPreferences("webos", Context.MODE_PRIVATE)
@@ -38,25 +41,37 @@ class WebOsClient(private val context: Context) {
             "ssap://com.webos.service.connectionmanager/getinfo",
             JSONObject(), timeoutSecs = 8
         )
-        val payload = (reply as? CmdReply.Ok)?.payload ?: return null
-        return payload.optJSONObject("wifiInfo")?.optString("macAddress")?.takeIf { it.isNotEmpty() }
-            ?: payload.optJSONObject("wiredInfo")?.optString("macAddress")?.takeIf { it.isNotEmpty() }
+        return macsFrom((reply as? CmdReply.Ok)?.payload).joinToString(", ").ifEmpty { null }
+    }
+
+    // getinfo reports the Wi-Fi and the wired MAC whichever interface is plugged in,
+    // and only the live one wakes the TV, so both are kept and both get a packet.
+    private fun macsFrom(payload: JSONObject?): List<String> =
+        listOf("wifiInfo", "wiredInfo").mapNotNull {
+            payload?.optJSONObject(it)?.optString("macAddress")?.takeIf { m -> m.isNotEmpty() }
+        }
+
+    /** Adds what the TV reports to the saved MACs without dropping one typed in by hand. */
+    private fun mergeMacs(found: List<String>) {
+        val saved = macList(tvMac)
+        val merged = (saved + found).distinctBy { it.uppercase() }
+        if (merged != saved) prefs.edit().putString("tv_mac", merged.joinToString(", ")).apply()
     }
 
     fun sendWakeOnLan() {
-        val mac = tvMac.ifEmpty { return }
-        try {
-            val macBytes = mac.split(":").map { it.toInt(16).toByte() }.toByteArray()
-            if (macBytes.size != 6) return
+        val macs = macList(tvMac).ifEmpty { return }
+        val ip = tvIp
+        // A TV on another VLAN never sees the limited broadcast, so also try the
+        // directed broadcast of its subnet and a plain unicast (works while the
+        // gateway still has an ARP entry for the sleeping TV).
+        val targets = listOf("255.255.255.255", ip.substringBeforeLast('.') + ".255", ip)
+        val lan = if (LanNetwork.isTethered(context, ip)) null else LanNetwork.get(context)
+        for (mac in macs) {
+            val macBytes = runCatching { mac.split(":", "-").map { it.toInt(16).toByte() }.toByteArray() }
+                .getOrNull()?.takeIf { it.size == 6 } ?: continue
             val packet = ByteArray(6 + 16 * 6)
             for (i in 0..5) packet[i] = 0xFF.toByte()
             for (i in 0..15) for (j in 0..5) packet[6 + i * 6 + j] = macBytes[j]
-            val ip = tvIp
-            // A TV on another VLAN never sees the limited broadcast, so also try the
-            // directed broadcast of its subnet and a plain unicast (works while the
-            // gateway still has an ARP entry for the sleeping TV).
-            val targets = listOf("255.255.255.255", ip.substringBeforeLast('.') + ".255", ip)
-            val lan = if (LanNetwork.isTethered(context, ip)) null else LanNetwork.get(context)
             for (target in targets) {
                 try {
                     java.net.DatagramSocket().use { socket ->
@@ -67,7 +82,7 @@ class WebOsClient(private val context: Context) {
                     }
                 } catch (_: Exception) { }
             }
-        } catch (_: Exception) { }
+        }
     }
 
     sealed class Result {
@@ -189,7 +204,8 @@ class WebOsClient(private val context: Context) {
                             type == "registered" -> {
                                 val key = json.optJSONObject("payload")?.optString("client-key")
                                 if (!key.isNullOrEmpty()) prefs.edit().putString("client_key", key).apply()
-                                if (prefs.getString("tv_mac", "").isNullOrEmpty()) {
+                                // Fewer than two means a pairing from before both MACs were kept
+                                if (macList(tvMac).size < 2) {
                                     ws.send(JSONObject().apply {
                                         put("id", "s_mac"); put("type", "request")
                                         put("uri", "ssap://com.webos.service.connectionmanager/getinfo")
@@ -205,10 +221,7 @@ class WebOsClient(private val context: Context) {
                                 failAll(CmdReply.NeedsPairing)
                             }
                             type == "response" && id == "s_mac" -> {
-                                val p = json.optJSONObject("payload")
-                                val mac = p?.optJSONObject("wifiInfo")?.optString("macAddress")?.takeIf { it.isNotEmpty() }
-                                    ?: p?.optJSONObject("wiredInfo")?.optString("macAddress")?.takeIf { it.isNotEmpty() }
-                                if (!mac.isNullOrEmpty()) prefs.edit().putString("tv_mac", mac).apply()
+                                mergeMacs(macsFrom(json.optJSONObject("payload")))
                             }
                             type == "response" && subscriptions.containsKey(id) ->
                                 subscriptions[id]?.invoke(json.optJSONObject("payload"))

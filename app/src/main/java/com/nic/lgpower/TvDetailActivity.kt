@@ -59,7 +59,7 @@ class TvDetailActivity : AppCompatActivity() {
             prefs, tvId,
             name = findViewById<EditText>(R.id.edit_name).text.toString(),
             ip = findViewById<EditText>(R.id.edit_tv_ip).text.toString().trim(),
-            mac = findViewById<EditText>(R.id.edit_tv_mac).text.toString().trim()
+            mac = macList(findViewById<EditText>(R.id.edit_tv_mac).text.toString()).joinToString(", ")
         )
     }
 

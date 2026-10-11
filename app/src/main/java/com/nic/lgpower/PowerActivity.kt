@@ -32,7 +32,7 @@ class PowerActivity : Activity() {
                     val r = client.turnOff()
                     if (r is WebOsClient.Result.Error) toast("Error: ${r.message}")
                 }
-                client.tvMac.isNotEmpty() -> wake(client)
+                macList(client.tvMac).isNotEmpty() -> wake(client)
                 hasIr -> runCatching { irManager!!.transmit(38000, LGPowerWidget.LG_POWER_PATTERN) }
                 else -> toast("Can't reach the TV. Set its MAC address in Settings to wake it over the network")
             }
