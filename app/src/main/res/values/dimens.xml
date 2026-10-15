@@ -1,6 +1,8 @@
 <?xml version="1.0" encoding="utf-8"?>
 <!-- Compact defaults so the pills + d-pad row fits 360dp screens
-     (common Samsungs); values-sw400dp restores the full sizes. -->
+     (common Samsungs); values-sw410dp restores the full sizes. The full
+     row needs 2×54 + 2×10 + 230 + 2×24 padding = 406dp, so 400dp phones
+     (1200px at 3x) clipped the right pill under an sw400dp qualifier. -->
 <resources>
     <dimen name="main_pad_h">20dp</dimen>
     <dimen name="pill_width">48dp</dimen>

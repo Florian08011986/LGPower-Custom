@@ -8,8 +8,4 @@
     <path
         android:fillColor="#FFFFFF"
         android:pathData="M12,6l-6,7h4v5h4v-5h4z" />
-    <!-- CH label dots -->
-    <path
-        android:fillColor="#FFFFFF"
-        android:pathData="M5,4.5A1,1 0,1,1 5,4.49z" />
 </vector>
