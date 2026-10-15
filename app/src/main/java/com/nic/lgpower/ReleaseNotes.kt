@@ -13,6 +13,11 @@ object ReleaseNotes {
     fun since(lastSeenCode: Int) = all.filter { it.code > lastSeenCode }
 
     val all = listOf(
+        Release(46, "1.39.1", "2026-10-16", listOf(
+            "The remote fits on phones around 400dp wide instead of cutting off the right-hand buttons",
+            "Removed a stray dot on the channel-up button",
+            "Phones with an IR blaster can skip setup and go straight to the IR service remote",
+        )),
         Release(45, "1.39.0", "2026-10-11", listOf(
             "Wake-on-LAN wakes the TV whether it's on Wi-Fi or a network cable, and the TV screen in Settings shows both addresses",
         )),
