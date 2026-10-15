@@ -333,6 +333,12 @@ class SetupActivity : AppCompatActivity() {
         findViewById<View>(R.id.screen_searching).visibility = if (s == Screen.SEARCHING) View.VISIBLE else View.GONE
         findViewById<View>(R.id.screen_tv_list).visibility   = if (s == Screen.TV_LIST)   View.VISIBLE else View.GONE
         findViewById<View>(R.id.screen_pairing).visibility   = if (s == Screen.PAIRING)   View.VISIBLE else View.GONE
+        findViewById<View>(R.id.btn_ir_only).visibility =
+            if (s != Screen.PAIRING && !addMode && hasIr) View.VISIBLE else View.GONE
+    }
+
+    private val hasIr by lazy {
+        (getSystemService(CONSUMER_IR_SERVICE) as? android.hardware.ConsumerIrManager)?.hasIrEmitter() == true
     }
 
     private fun applyButton(btn: View, theme: ThemeConfig, accent: Boolean) {
@@ -367,5 +373,10 @@ class SetupActivity : AppCompatActivity() {
         findViewById<TextView>(R.id.setup_subtitle).setTextColor(theme.secondaryText)
         findViewById<TextView>(R.id.search_label).setTextColor(theme.secondaryText)
         findViewById<TextView>(R.id.no_tvs_label).setTextColor(theme.secondaryText)
+        findViewById<TextView>(R.id.btn_ir_only).apply {
+            setTextColor(theme.secondaryText)
+            paintFlags = paintFlags or android.graphics.Paint.UNDERLINE_TEXT_FLAG
+            setOnClickListener { startActivity(Intent(this@SetupActivity, ServiceRemoteActivity::class.java)) }
+        }
     }
 }

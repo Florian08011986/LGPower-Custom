@@ -265,6 +265,20 @@
 
         </LinearLayout>
 
+        <!-- Some IR-phone owners never want the app on their network; the service
+             remote is IR-only, so it works without pairing -->
+        <TextView
+            android:id="@+id/btn_ir_only"
+            android:layout_width="wrap_content"
+            android:layout_height="48dp"
+            android:layout_marginTop="28dp"
+            android:gravity="center"
+            android:paddingHorizontal="16dp"
+            android:text="Skip, use the IR service remote"
+            android:textSize="14sp"
+            android:background="?android:attr/selectableItemBackground"
+            android:visibility="gone" />
+
     </LinearLayout>
 
 </ScrollView>
