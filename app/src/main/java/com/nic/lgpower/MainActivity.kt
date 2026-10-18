@@ -30,7 +30,7 @@ class MainActivity : AppCompatActivity() {
         
         // Erstes Starten: Wenn keine IP hinterlegt ist, zum Setup wechseln
         if (client.tvIp.isBlank()) {
-            appPrefs.edit().putInt("last_seen_version", BuildConfig.VERSION_CODE).apply()
+            getSharedPreferences("webos", MODE_PRIVATE).edit().putInt("last_seen_version", BuildConfig.VERSION_CODE).apply()
             startActivity(android.content.Intent(this, SetupActivity::class.java))
             finish()
             return
