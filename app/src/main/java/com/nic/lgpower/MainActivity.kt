@@ -19,9 +19,13 @@ import java.util.concurrent.atomic.AtomicBoolean
 
 class MainActivity : AppCompatActivity() {
 
+    companion object {
+        const val PREF_TOUR_PENDING = com.nic.lgpower.Tour.PREF_MAIN
+    }
+
     private val client by lazy { WebOsClient(this) }
     private val statusHandler = Handler(Looper.getMainLooper())
-    
+
     @Volatile private var tvConnected = false
     @Volatile private var wakeHomeGen = 0
 
@@ -114,16 +118,11 @@ class MainActivity : AppCompatActivity() {
     }
     
     // Hilfsfunktionen (Original-Logik)
-    private fun tvIsOn(): Boolean {
-        var ret = false
-        val t = Thread { ret = client.checkConnection() }
-        t.start()
-        t.join(800)
-        return ret
-    }
+    private fun tvIsOn(): Boolean =
+        (client.awaitPresence(3_000) as? WebOsClient.Presence.Reported)?.isOn == true
 
     private fun wakeTv(gen: Int, onAwake: () -> Unit) {
-        client.wakeOnLan()
+        client.sendWakeOnLan()
         for (i in 0..15) {
             if (wakeHomeGen != gen) return
             if (tvIsOn()) {
