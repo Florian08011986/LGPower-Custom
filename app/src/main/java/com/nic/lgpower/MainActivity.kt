@@ -1,5 +1,6 @@
 package com.nic.lgpower
 
+import com.nic.lgpower.ui.OmaHeidiRemoteScreen
 import android.animation.ValueAnimator
 import android.app.ActivityManager
 import android.content.res.ColorStateList
