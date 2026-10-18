@@ -5,6 +5,9 @@ on:
     branches: [ main ]
   workflow_dispatch:
 
+permissions:
+  contents: write
+
 jobs:
   build:
     name: Assemble Debug APK
@@ -23,12 +26,43 @@ jobs:
       - name: Berechtigung für Gradle-Wrapper setzen
         run: chmod +x gradlew
 
+      - name: Debug-Keystore aus Secret entschluesseln (fester Fingerabdruck)
+        env:
+          DEBUG_KEYSTORE_B64: ${{ secrets.DEBUG_KEYSTORE_B64 }}
+        run: |
+          if [ -n "$DEBUG_KEYSTORE_B64" ]; then
+            echo "$DEBUG_KEYSTORE_B64" | base64 -d > app/debug.keystore
+            echo "Fester Debug-Keystore aus Secret geladen."
+          else
+            echo "Kein DEBUG_KEYSTORE_B64 gesetzt - Gradle nimmt den Auto-Debug-Keystore."
+            # Fallback: Gradle legt ~/.android/debug.keystore selbst an.
+            # In app/build.gradle MUSS dafuer der 'debug'-signingConfig
+            # bedingt sein, sonst scheitert der Build. Siehe Fallback-Zweig.
+          fi
+
       - name: Kompiliere Debug APK
         run: ./gradlew assembleDebug --no-daemon
 
-      - name: Lade fertige APK hoch
+      - name: APK umbenennen fuer stabilen Dateinamen
+        run: cp app/build/outputs/apk/debug/app-debug.apk OmaHeidisFernbedienung.apk
+
+      - name: Lade fertige APK als Artifact hoch
         uses: actions/upload-artifact@v4
         with:
           name: OmaHeidisFernbedienung-Debug
-          path: app/build/outputs/apk/debug/*.apk
+          path: OmaHeidisFernbedienung.apk
           retention-days: 14
+
+      - name: Veroeffentliche als "latest" Release
+        uses: softprops/action-gh-release@v2
+        with:
+          tag_name: latest
+          name: "Latest Debug Build"
+          body: |
+            Automatisch gebaute Debug-APK vom neuesten `main`-Stand.
+
+            **Install:** APK herunterladen, antippen, Fingerabdruck.
+            Fester Debug-Keystore - Updates ohne Deinstallation.
+          files: OmaHeidisFernbedienung.apk
+          make_latest: "true"
+          prerelease: false
