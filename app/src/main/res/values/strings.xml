@@ -1,6 +1,6 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
-    <string name="app_name">LG Power</string>
+    <string name="app_name">Oma Heidis Fernbedienung</string>
     <string name="widget_label">TV Power</string>
     <string name="widget_description">Turn the TV on or off over Wi-Fi, IR if the TV is unreachable</string>
     <string name="screen_off_widget_label">TV Screen Off</string>
