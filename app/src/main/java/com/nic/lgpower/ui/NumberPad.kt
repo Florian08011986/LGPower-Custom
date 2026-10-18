@@ -8,6 +8,7 @@ import androidx.compose.material3.*
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 
@@ -18,9 +19,9 @@ fun NumberPad(
     modifier: Modifier = Modifier
 ) {
     Column(
-        modifier = modifier.fillMaxWidth(),
+        modifier = modifier,
         horizontalAlignment = Alignment.CenterHorizontally,
-        verticalArrangement = Arrangement.spacedBy(10.dp)
+        verticalArrangement = Arrangement.spacedBy(14.dp)
     ) {
         Row(horizontalArrangement = Arrangement.spacedBy(18.dp)) {
             NumberPadButton(1, onNumberClick)
@@ -41,6 +42,8 @@ fun NumberPad(
             horizontalArrangement = Arrangement.spacedBy(18.dp),
             verticalAlignment = Alignment.CenterVertically
         ) {
+            Spacer(modifier = Modifier.size(64.dp))
+            NumberPadButton(0, onNumberClick)
             FilledTonalIconButton(
                 onClick = onBackClick,
                 shape = CircleShape,
@@ -52,8 +55,6 @@ fun NumberPad(
                     modifier = Modifier.size(28.dp)
                 )
             }
-            NumberPadButton(0, onNumberClick)
-            Spacer(modifier = Modifier.size(64.dp))
         }
     }
 }
@@ -76,7 +77,7 @@ private fun NumberPadButton(
         Text(
             text = digit.toString(),
             fontSize = 24.sp,
-            style = MaterialTheme.typography.titleLarge
+            fontWeight = FontWeight.SemiBold
         )
     }
 }

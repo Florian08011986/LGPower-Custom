@@ -6,6 +6,8 @@ import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.ChevronLeft
+import androidx.compose.material.icons.filled.ChevronRight
 import androidx.compose.material.icons.filled.KeyboardArrowDown
 import androidx.compose.material.icons.filled.KeyboardArrowUp
 import androidx.compose.material.icons.filled.PowerSettingsNew
@@ -35,7 +37,8 @@ fun OmaHeidiRemoteScreen(
                     Text(
                         text = "Oma Heidis Fernbedienung",
                         fontWeight = FontWeight.Bold,
-                        style = MaterialTheme.typography.titleLarge
+                        fontSize = 20.sp,
+                        maxLines = 1
                     )
                 },
                 colors = TopAppBarDefaults.centerAlignedTopAppBarColors(
@@ -51,9 +54,9 @@ fun OmaHeidiRemoteScreen(
                 .fillMaxSize()
                 .padding(innerPadding)
                 .verticalScroll(rememberScrollState())
-                .padding(horizontal = 16.dp, vertical = 8.dp),
+                .padding(horizontal = 24.dp, vertical = 8.dp),
             horizontalAlignment = Alignment.CenterHorizontally,
-            verticalArrangement = Arrangement.spacedBy(18.dp)
+            verticalArrangement = Arrangement.spacedBy(22.dp)
         ) {
             Button(
                 onClick = onPowerClick,
@@ -62,28 +65,27 @@ fun OmaHeidiRemoteScreen(
                     containerColor = Color(0xFFE53935),
                     contentColor = Color.White
                 ),
-                modifier = Modifier.size(72.dp),
+                modifier = Modifier.size(76.dp),
                 contentPadding = PaddingValues(0.dp)
             ) {
                 Icon(
                     imageVector = Icons.Default.PowerSettingsNew,
                     contentDescription = "Ein / Aus",
-                    modifier = Modifier.size(36.dp)
+                    modifier = Modifier.size(38.dp)
                 )
             }
 
             Row(
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .padding(vertical = 4.dp),
+                modifier = Modifier.fillMaxWidth(),
                 horizontalArrangement = Arrangement.SpaceEvenly,
-                verticalAlignment = Alignment.CenterVertically
+                verticalAlignment = Alignment.Top
             ) {
                 VerticalRocker(
                     topIcon = Icons.Default.KeyboardArrowUp,
                     topDesc = "Kanal hoch",
                     bottomIcon = Icons.Default.KeyboardArrowDown,
                     bottomDesc = "Kanal runter",
+                    label = "Kanal",
                     onTopClick = { onSendKey("CHANNELUP") },
                     onBottomClick = { onSendKey("CHANNELDOWN") }
                 )
@@ -101,13 +103,14 @@ fun OmaHeidiRemoteScreen(
                     topDesc = "Lauter",
                     bottomIcon = Icons.Default.VolumeDown,
                     bottomDesc = "Leiser",
+                    label = "Lautstärke",
                     onTopClick = { onSendKey("VOLUMEUP") },
                     onBottomClick = { onSendKey("VOLUMEDOWN") }
                 )
             }
 
             HorizontalDivider(
-                modifier = Modifier.padding(vertical = 4.dp),
+                modifier = Modifier.fillMaxWidth(0.7f),
                 thickness = 1.dp,
                 color = MaterialTheme.colorScheme.surfaceVariant
             )
@@ -116,6 +119,8 @@ fun OmaHeidiRemoteScreen(
                 onNumberClick = { digit -> onSendKey(digit.toString()) },
                 onBackClick = { onSendKey("BACK") }
             )
+
+            Spacer(modifier = Modifier.height(12.dp))
         }
     }
 }
@@ -126,38 +131,51 @@ fun VerticalRocker(
     topDesc: String,
     bottomIcon: ImageVector,
     bottomDesc: String,
+    label: String,
     onTopClick: () -> Unit,
     onBottomClick: () -> Unit,
     modifier: Modifier = Modifier
 ) {
-    Surface(
-        shape = RoundedCornerShape(32.dp),
-        color = MaterialTheme.colorScheme.surfaceVariant,
+    Column(
+        horizontalAlignment = Alignment.CenterHorizontally,
         modifier = modifier
-            .width(60.dp)
-            .height(165.dp)
     ) {
-        Column(
-            horizontalAlignment = Alignment.CenterHorizontally,
-            verticalArrangement = Arrangement.SpaceBetween,
+        Surface(
+            shape = RoundedCornerShape(34.dp),
+            color = MaterialTheme.colorScheme.surfaceVariant,
             modifier = Modifier
-                .fillMaxHeight()
-                .padding(vertical = 8.dp)
+                .width(64.dp)
+                .height(170.dp)
         ) {
-            IconButton(
-                onClick = onTopClick,
-                modifier = Modifier.size(46.dp)
+            Column(
+                horizontalAlignment = Alignment.CenterHorizontally,
+                verticalArrangement = Arrangement.SpaceBetween,
+                modifier = Modifier
+                    .fillMaxHeight()
+                    .padding(vertical = 10.dp)
             ) {
-                Icon(topIcon, contentDescription = topDesc, modifier = Modifier.size(28.dp))
-            }
-            HorizontalDivider(modifier = Modifier.width(32.dp))
-            IconButton(
-                onClick = onBottomClick,
-                modifier = Modifier.size(46.dp)
-            ) {
-                Icon(bottomIcon, contentDescription = bottomDesc, modifier = Modifier.size(28.dp))
+                IconButton(
+                    onClick = onTopClick,
+                    modifier = Modifier.size(48.dp)
+                ) {
+                    Icon(topIcon, contentDescription = topDesc, modifier = Modifier.size(30.dp))
+                }
+                HorizontalDivider(modifier = Modifier.width(34.dp))
+                IconButton(
+                    onClick = onBottomClick,
+                    modifier = Modifier.size(48.dp)
+                ) {
+                    Icon(bottomIcon, contentDescription = bottomDesc, modifier = Modifier.size(30.dp))
+                }
             }
         }
+        Text(
+            text = label,
+            fontSize = 12.sp,
+            fontWeight = FontWeight.Medium,
+            color = MaterialTheme.colorScheme.onSurfaceVariant,
+            modifier = Modifier.padding(top = 8.dp)
+        )
     }
 }
 
@@ -170,47 +188,75 @@ fun DpadSurface(
     onOk: () -> Unit,
     modifier: Modifier = Modifier
 ) {
-    Surface(
-        shape = CircleShape,
-        color = MaterialTheme.colorScheme.surfaceVariant,
-        modifier = modifier.size(170.dp)
+    Column(
+        horizontalAlignment = Alignment.CenterHorizontally,
+        modifier = modifier
     ) {
-        Box(
-            modifier = Modifier.fillMaxSize(),
-            contentAlignment = Alignment.Center
+        Surface(
+            shape = CircleShape,
+            color = MaterialTheme.colorScheme.surfaceVariant,
+            modifier = Modifier.size(170.dp)
         ) {
-            IconButton(
-                onClick = onUp,
-                modifier = Modifier.align(Alignment.TopCenter).padding(top = 2.dp)
+            Box(
+                modifier = Modifier.fillMaxSize(),
+                contentAlignment = Alignment.Center
             ) {
-                Icon(Icons.Default.KeyboardArrowUp, contentDescription = "Hoch", modifier = Modifier.size(32.dp))
-            }
-            IconButton(
-                onClick = onDown,
-                modifier = Modifier.align(Alignment.BottomCenter).padding(bottom = 2.dp)
-            ) {
-                Icon(Icons.Default.KeyboardArrowDown, contentDescription = "Runter", modifier = Modifier.size(32.dp))
-            }
-            IconButton(
-                onClick = onLeft,
-                modifier = Modifier.align(Alignment.CenterStart).padding(start = 2.dp)
-            ) {
-                Text("◀", fontSize = 18.sp)
-            }
-            IconButton(
-                onClick = onRight,
-                modifier = Modifier.align(Alignment.CenterEnd).padding(end = 2.dp)
-            ) {
-                Text("▶", fontSize = 18.sp)
-            }
-            FilledTonalButton(
-                onClick = onOk,
-                shape = CircleShape,
-                modifier = Modifier.size(64.dp),
-                contentPadding = PaddingValues(0.dp)
-            ) {
-                Text("OK", fontWeight = FontWeight.Bold, fontSize = 17.sp)
+                IconButton(
+                    onClick = onUp,
+                    modifier = Modifier
+                        .align(Alignment.TopCenter)
+                        .padding(top = 6.dp)
+                        .size(44.dp)
+                ) {
+                    Icon(Icons.Default.KeyboardArrowUp, contentDescription = "Hoch", modifier = Modifier.size(30.dp))
+                }
+                IconButton(
+                    onClick = onDown,
+                    modifier = Modifier
+                        .align(Alignment.BottomCenter)
+                        .padding(bottom = 6.dp)
+                        .size(44.dp)
+                ) {
+                    Icon(Icons.Default.KeyboardArrowDown, contentDescription = "Runter", modifier = Modifier.size(30.dp))
+                }
+                IconButton(
+                    onClick = onLeft,
+                    modifier = Modifier
+                        .align(Alignment.CenterStart)
+                        .padding(start = 6.dp)
+                        .size(44.dp)
+                ) {
+                    Icon(Icons.Default.ChevronLeft, contentDescription = "Links", modifier = Modifier.size(30.dp))
+                }
+                IconButton(
+                    onClick = onRight,
+                    modifier = Modifier
+                        .align(Alignment.CenterEnd)
+                        .padding(end = 6.dp)
+                        .size(44.dp)
+                ) {
+                    Icon(Icons.Default.ChevronRight, contentDescription = "Rechts", modifier = Modifier.size(30.dp))
+                }
+                FilledTonalButton(
+                    onClick = onOk,
+                    shape = CircleShape,
+                    colors = ButtonDefaults.filledTonalButtonColors(
+                        containerColor = MaterialTheme.colorScheme.primaryContainer,
+                        contentColor = MaterialTheme.colorScheme.onPrimaryContainer
+                    ),
+                    modifier = Modifier.size(70.dp),
+                    contentPadding = PaddingValues(0.dp)
+                ) {
+                    Text("OK", fontWeight = FontWeight.Bold, fontSize = 18.sp)
+                }
             }
         }
+        Text(
+            text = "Auswahl",
+            fontSize = 12.sp,
+            fontWeight = FontWeight.Medium,
+            color = MaterialTheme.colorScheme.onSurfaceVariant,
+            modifier = Modifier.padding(top = 8.dp)
+        )
     }
 }
