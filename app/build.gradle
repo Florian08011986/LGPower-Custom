@@ -22,17 +22,16 @@ android {
             keyAlias System.getenv("KEY_ALIAS") ?: ""
             keyPassword System.getenv("KEY_PASSWORD") ?: ""
         }
-        debug {
-            // Fester Debug-Keystore damit alle CI-Builds dieselbe Signatur haben
-            // und Updates ohne Deinstallation gehen. Datei ist nicht eingecheckt
-            // (Standard-Passwort, aber Push-Vorpruefung sperrt .keystore grundsaetzlich);
-            // CI entschluesselt sie aus Secret DEBUG_KEYSTORE_B64 in app/debug.keystore.
-            // Fehlt die Datei (lokaler Build ohne Keystore, oder Secret fehlt in CI),
-            // springt Gradle automatisch auf den auto-generierten Debug-Keystore zurueck.
-            storeFile file("debug.keystore")
-            storePassword "android"
-            keyAlias "androiddebugkey"
-            keyPassword "android"
+        // Fester Debug-Keystore: nur anlegen, wenn die Datei wirklich da ist.
+        // CI entschluesselt sie aus Secret DEBUG_KEYSTORE_B64; fehlt das Secret,
+        // greift der auto-generierte Keystore (Signatur dann je Build verschieden).
+        if (file("debug.keystore").exists()) {
+            fixedDebug {
+                storeFile file("debug.keystore")
+                storePassword "android"
+                keyAlias "androiddebugkey"
+                keyPassword "android"
+            }
         }
     }
 
@@ -43,9 +42,8 @@ android {
             proguardFiles getDefaultProguardFile('proguard-android-optimize.txt'), 'proguard-rules.pro'
         }
         debug {
-            // Signatur nur setzen wenn die Keystore-Datei existiert, sonst Gradle-Default.
-            if (file("debug.keystore").exists()) {
-                signingConfig signingConfigs.debug
+            if (signingConfigs.findByName("fixedDebug") != null) {
+                signingConfig signingConfigs.fixedDebug
             }
         }
     }
